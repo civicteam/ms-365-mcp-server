@@ -241,6 +241,7 @@ function reduceProperties(schema, schemaName) {
       'userPrincipalName',
       'title',
       'content',
+      'contentBytes', // Added for file upload/attachment support
       'body',
       'subject',
       'message',
