@@ -1,0 +1,14 @@
+node_modules
+dist
+openapi
+.git
+.github
+.vscode
+.idea
+*.log
+*.md
+!CIVIC_CHANGES.md
+.env
+.token-cache.json
+coverage
+.nyc_output
