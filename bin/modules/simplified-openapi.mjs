@@ -55,6 +55,10 @@ export function createAndSaveSimplifiedOpenAPI(endpointsFile, openapiFile, opena
     simplifyAnyOfInPaths(openApiSpec.paths);
   }
 
+  // Fix attachment schema to include contentBytes from fileAttachment BEFORE pruning
+  console.log('🔧 Merging fileAttachment properties into attachment schema...');
+  mergeFileAttachmentProperties(openApiSpec.components.schemas);
+
   console.log('🧹 Pruning unused schemas...');
   const usedSchemas = findUsedSchemas(openApiSpec);
   pruneUnusedSchemas(openApiSpec, usedSchemas);
@@ -669,4 +673,55 @@ function pruneUnusedSchemas(openApiSpec, usedSchemas) {
       `   Removed ${originalRequestBodyCount - newRequestBodyCount} unused request bodies (from ${originalRequestBodyCount} to ${newRequestBodyCount})`
     );
   }
+}
+
+function mergeFileAttachmentProperties(schemas) {
+  // The microsoft.graph.attachment schema is missing contentBytes which is in fileAttachment
+  // Since we're flattening the inheritance hierarchy anyway, merge the fileAttachment properties
+  // into the base attachment schema so the add-mail-attachment endpoint works correctly
+
+  const attachmentSchema = schemas['microsoft.graph.attachment'];
+  const fileAttachmentSchema = schemas['microsoft.graph.fileAttachment'];
+
+  if (!attachmentSchema) {
+    console.log('   Warning: attachment schema not found, skipping merge');
+    return;
+  }
+
+  if (!fileAttachmentSchema) {
+    console.log('   Warning: fileAttachment schema not found, skipping merge');
+    return;
+  }
+
+  // Ensure attachment has properties object
+  if (!attachmentSchema.properties) {
+    attachmentSchema.properties = {};
+  }
+
+  // Add fileAttachment-specific properties to the base attachment
+  const propertiesToAdd = {
+    contentBytes: {
+      type: 'string',
+      description: 'The base64-encoded contents of the file.',
+      format: 'base64url',
+      nullable: true
+    },
+    contentId: {
+      type: 'string',
+      description: 'The ID of the attachment in the Exchange store.',
+      nullable: true
+    },
+    contentLocation: {
+      type: 'string',
+      description: 'Do not use this property as it is not supported.',
+      nullable: true
+    }
+  };
+
+  Object.entries(propertiesToAdd).forEach(([key, value]) => {
+    if (!attachmentSchema.properties[key]) {
+      attachmentSchema.properties[key] = value;
+      console.log(`   Added ${key} to attachment schema`);
+    }
+  });
 }
