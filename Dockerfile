@@ -22,6 +22,9 @@ RUN npm run generate && npm run build
 # Remove dev dependencies to reduce size
 RUN npm prune --production
 
+# Create logs directory with proper permissions
+RUN mkdir -p /app/logs && chmod 777 /app/logs
+
 # Expose port for HTTP mode (optional)
 EXPOSE 3000
 
