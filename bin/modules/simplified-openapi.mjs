@@ -700,6 +700,12 @@ function mergeFileAttachmentProperties(schemas) {
 
   // Add fileAttachment-specific properties to the base attachment
   const propertiesToAdd = {
+    '@odata.type': {
+      type: 'string',
+      description: 'The OData type of the attachment. Required by Microsoft Graph API to distinguish attachment types.',
+      default: '#microsoft.graph.fileAttachment',
+      enum: ['#microsoft.graph.fileAttachment']
+    },
     contentBytes: {
       type: 'string',
       description: 'The base64-encoded contents of the file.',
