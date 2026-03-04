@@ -15,6 +15,7 @@ interface EndpointConfig {
   pathPattern: string;
   method: string;
   toolName: string;
+  description?: string; // Override for incorrect OpenAPI-generated descriptions
   scopes?: string[];
   workScopes?: string[];
   returnDownloadUrl?: boolean;
@@ -455,9 +456,11 @@ export function registerGraphTools(
         .optional();
     }
 
-    // Build the tool description, optionally appending LLM tips
+    // Build the tool description, preferring endpoint config override, then generated, then fallback
     let toolDescription =
-      tool.description || `Execute ${tool.method.toUpperCase()} request to ${tool.path}`;
+      endpointConfig?.description ||
+      tool.description ||
+      `Execute ${tool.method.toUpperCase()} request to ${tool.path}`;
     if (endpointConfig?.llmTip) {
       toolDescription += `\n\n💡 TIP: ${endpointConfig.llmTip}`;
     }
