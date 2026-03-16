@@ -32,6 +32,22 @@ const priorityProperties = [
 - ✅ `send-mail` with attachments - Now works correctly
 - ✅ OneDrive file uploads - Should now work correctly (related to issue #56)
 
+### 2. Fixed Incorrect Tool Descriptions from OpenAPI Spec
+
+**Files:** `src/endpoints.json`, `src/graph-tools.ts`
+
+**Problem:**
+The Microsoft Graph OpenAPI spec contains incorrect descriptions for several endpoints. The code generator copies these verbatim, resulting in tool descriptions like "Get an open extension (openTypeExtension object)..." instead of the actual operation description. This affects 4 tools:
+- `list-mail-messages` — was "Get an open extension..."
+- `create-draft-email` — was "Create an open extension..."
+- `create-calendar-event` — was "Create one or more multi-value extended properties..."
+- `reply-to-group-thread` — was "Create an open extension..."
+
+**Solution:**
+Added a `description` override field to `EndpointConfig` in `graph-tools.ts` and set correct descriptions in `endpoints.json` for the affected tools. The tool description resolution now prefers `endpointConfig.description` over the generated `tool.description`.
+
+**Status:** Not fixed upstream (as of March 2026). The bug originates from Microsoft's OpenAPI metadata.
+
 ## Testing
 
 To test the fix:
@@ -59,6 +75,16 @@ To test the fix:
      }
    }
    ```
+
+## Generating the Tool List
+
+To extract the full list of MCP tool definitions (names, descriptions, and input schemas) as JSON:
+
+```bash
+npx @modelcontextprotocol/inspector --cli npx tsx src/index.ts --preset all --org-mode --method tools/list > tools.json
+```
+
+This runs the server via the MCP inspector without requiring authentication and outputs the `tools/list` response.
 
 ## Known Limitations
 
